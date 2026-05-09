@@ -457,29 +457,50 @@ export default function App() {
     dispatch({ type: 'SET_REFRESHING', payload: true });
     
     try {
-      // Fetch some real crypto prices as representative "live" data
-      const [btcRes, ethRes] = await Promise.all([
-        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()),
-        fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot').then(r => r.json())
-      ]);
+      const response = await fetch('/api/markets');
+      const json = await response.json();
+      
+      if (!json.success) throw new Error(json.error || 'Failed to fetch market data');
 
-      const btcPrice = parseFloat(btcRes?.data?.amount || '64000');
-      const ethPrice = parseFloat(ethRes?.data?.amount || '3400');
+      const liveData = json.data;
 
       const updatedItems = state.marketItems.map(item => {
-        let newValNum: number;
-        if (item.name === 'Bitcoin') newValNum = btcPrice;
-        else if (item.name === 'Ethereum') newValNum = ethPrice;
-        else {
+        let newValNum: number | null = null;
+        let changeStr = item.change;
+        let up = item.up;
+
+        // Map live data to our assets
+        if (item.name === 'Bitcoin' && liveData['BTC-USD']) {
+          newValNum = liveData['BTC-USD'].price;
+          changeStr = (liveData['BTC-USD'].up ? '+' : '') + liveData['BTC-USD'].change + '%';
+          up = liveData['BTC-USD'].up;
+        } else if (item.name === 'Ethereum' && liveData['ETH-USD']) {
+          newValNum = liveData['ETH-USD'].price;
+          changeStr = (liveData['ETH-USD'].up ? '+' : '') + liveData['ETH-USD'].change + '%';
+          up = liveData['ETH-USD'].up;
+        } else if (item.name === 'Gold' && liveData['GC=F']) {
+          // Convert USD to INR roughly for Gold (1 Gold futures Oz to roughly 10g MCX is complex, but let's just use USD as base and adjust)
+          // For simplicity, let's keep it realistic and just show the value as is or slightly scaled for MCX vibes (e.g. 74,000 INR)
+          // Rough conversion for MCX per 10g: COMEX Price * USDINR / 2.83
+          const usdPrice = liveData['GC=F'].price;
+          newValNum = usdPrice * 83.5 / 2.83495231; // Roughly MCX 10g
+          changeStr = (liveData['GC=F'].up ? '+' : '') + liveData['GC=F'].change + '%';
+          up = liveData['GC=F'].up;
+        } else if (item.name === 'Crude Oil' && liveData['CL=F']) {
+          newValNum = liveData['CL=F'].price * 83.5; // Roughly Crude in INR
+          changeStr = (liveData['CL=F'].up ? '+' : '') + liveData['CL=F'].change + '%';
+          up = liveData['CL=F'].up;
+        }
+
+        if (newValNum === null) {
+          // Fallback simulation for stocks/other items
           const currentVal = parseFloat(item.value.replace(/,/g, ''));
           const volatility = 0.001; 
           const changePercent = (Math.random() * volatility * 2) - volatility;
           newValNum = currentVal * (1 + changePercent);
+          if (Math.random() > 0.8) up = !up;
+          changeStr = (up ? '+' : '-') + (Math.random() * 0.5).toFixed(2) + '%';
         }
-
-        let up = item.up;
-        if (Math.random() > 0.8) up = !up;
-        const changeStr = (up ? '+' : '-') + (Math.random() * 0.5).toFixed(2) + '%';
 
         return {
           ...item,
@@ -491,7 +512,7 @@ export default function App() {
 
       dispatch({ 
         type: 'UPDATE_MARKET_ITEMS', 
-        payload: { items: updatedItems, timestamp: new Date().toLocaleTimeString() } 
+        payload: { items: updatedItems, timestamp: json.timestamp } 
       });
     } catch (error) {
       console.error("Market data fetch failed:", error);
