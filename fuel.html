@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Master - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .input-glass:focus {
+            background: transparent;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+        }
+        .btn-fuel {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 1.25rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        .btn-fuel.active {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+        }
+        .petrol-active { background: #fef3c7; color: #d97706; border-color: #f59e0b; }
+        .dark .petrol-active { background: #f59e0b; color: white; }
+        
+        .diesel-active { background: #dbeafe; color: #2563eb; border-color: #3b82f6; }
+        .dark .diesel-active { background: #3b82f6; color: white; }
+        
+        .cng-active { background: #d1fae5; color: #059669; border-color: #10b981; }
+        .dark .cng-active { background: #10b981; color: white; }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 right-0 w-[60%] h-[40%] bg-amber-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 left-0 w-[40%] h-[30%] bg-blue-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/index.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-amber-600 dark:text-amber-500">FUEL</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">Trip Estimator</p>
+            </div>
+            <a href="/fuel-compare.html" class="w-12 h-12 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 flex items-center justify-center text-emerald-500 shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 16 4 4 4-4"/><path d="m7 20V4"/><path d="m21 8-4-4-4 4"/><path d="m17 4v16"/></svg>
+            </a>
+        </header>
+
+        <!-- Input Form -->
+        <div class="premium-card p-8 space-y-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl">
+            <!-- Fuel Type Selection -->
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Fuel Configuration</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <select id="citySelect" onchange="updatePriceFromCity()" class="input-glass rounded-2xl px-4 py-4 text-xs font-black font-display outline-none appearance-none">
+                        <optgroup label="Metros">
+                            <option value="mumbai">Mumbai</option>
+                            <option value="delhi">Delhi</option>
+                            <option value="bangalore">Bangalore</option>
+                            <option value="chennai">Chennai</option>
+                            <option value="kolkata">Kolkata</option>
+                            <option value="pune">Pune</option>
+                            <option value="hyderabad">Hyderabad</option>
+                        </optgroup>
+                        <optgroup label="States">
+                            <option value="maharashtra">Maharashtra</option>
+                            <option value="karnataka">Karnataka</option>
+                            <option value="rajasthan">Rajasthan</option>
+                            <option value="gujarat">Gujarat</option>
+                            <option value="punjab">Punjab</option>
+                            <option value="haryana">Haryana</option>
+                            <option value="up">Uttar Pradesh</option>
+                            <option value="mp">Madhya Pradesh</option>
+                            <option value="bihar">Bihar</option>
+                            <option value="tn">Tamil Nadu</option>
+                            <option value="kerala">Kerala</option>
+                            <option value="odisha">Odisha</option>
+                            <option value="assam">Assam</option>
+                            <option value="telangana">Telangana</option>
+                        </optgroup>
+                    </select>
+                    <div class="flex gap-2">
+                        <button id="pBtn" onclick="setFuelType('petrol')" class="btn-fuel petrol-active active">P</button>
+                        <button id="dBtn" onclick="setFuelType('diesel')" class="btn-fuel bg-slate-100 dark:bg-white/5 text-slate-400">D</button>
+                        <button id="cBtn" onclick="setFuelType('cng')" class="btn-fuel bg-slate-100 dark:bg-white/5 text-slate-400">C</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Distance -->
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Trip Distance (KM)</label>
+                <div class="relative">
+                    <input type="number" id="dist" value="100" oninput="calculateFuel()"
+                        class="w-full input-glass rounded-2xl px-6 py-5 font-display font-black text-3xl outline-none">
+                    <span class="absolute right-6 top-1/2 -translate-y-1/2 font-black text-slate-300 dark:text-zinc-600">KM</span>
+                </div>
+            </div>
+
+            <!-- Grid: Mileage & Price -->
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Avg Efficiency</label>
+                    <div class="relative">
+                        <input type="number" id="mileage" value="15" oninput="calculateFuel()"
+                            class="w-full input-glass rounded-2xl px-6 py-4 font-display font-black text-xl outline-none">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 dark:text-zinc-600">KMPL</span>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Fuel Price</label>
+                    <div class="relative">
+                        <input type="number" id="price" value="106.31" step="0.01" oninput="calculateFuel()"
+                            class="w-full input-glass rounded-2xl px-6 py-4 font-display font-black text-xl outline-none">
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-slate-300 dark:text-zinc-600">INR</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="calculateFuel()" class="w-full py-5 bg-amber-500 hover:bg-amber-600 text-white rounded-[2rem] font-display font-black text-lg uppercase tracking-[0.2em] shadow-xl shadow-amber-500/20 active:scale-95 transition-all flex items-center justify-center gap-3">
+                Calculate Trip
+            </button>
+        </div>
+
+        <!-- Results Area -->
+        <div id="fuelRes" class="hidden space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="premium-card p-8 flex flex-col items-center text-center bg-white/40 dark:bg-amber-500/5 border-amber-500/20">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Trip Cost</p>
+                    <p id="tripCost" class="text-3xl font-display font-black text-amber-500">₹ 0</p>
+                </div>
+                <div class="premium-card p-8 flex flex-col items-center text-center">
+                    <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Fuel Needed</p>
+                    <p id="fuelReq" class="text-3xl font-display font-black text-slate-900 dark:text-white">0 L</p>
+                </div>
+            </div>
+            
+            <div class="premium-card p-6 bg-emerald-500/5 border-emerald-500/10 flex items-center gap-5">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div>
+                    <h4 id="fuelTypeLabel" class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Efficiency Tip</h4>
+                    <p id="fuelTip" class="text-xs font-semibold text-slate-600 dark:text-zinc-400 mt-1 leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+
+        let currentFuelType = 'petrol';
+        const pricingData = {
+            mumbai: { petrol: 106.31, diesel: 94.27, cng: 76.00 },
+            delhi: { petrol: 94.72, diesel: 87.62, cng: 74.09 },
+            bangalore: { petrol: 102.94, diesel: 88.89, cng: 82.50 },
+            chennai: { petrol: 100.75, diesel: 92.34, cng: 79.50 },
+            hyderabad: { petrol: 107.41, diesel: 95.65, cng: 89.00 },
+            pune: { petrol: 106.17, diesel: 92.68, cng: 83.00 },
+            kolkata: { petrol: 103.94, diesel: 90.76, cng: 87.00 },
+            maharashtra: { petrol: 106.50, diesel: 94.50, cng: 78.00 },
+            karnataka: { petrol: 103.20, diesel: 89.10, cng: 83.50 },
+            rajasthan: { petrol: 108.40, diesel: 93.70, cng: 81.00 },
+            gujarat: { petrol: 96.50, diesel: 92.30, cng: 76.50 },
+            punjab: { petrol: 98.20, diesel: 88.50, cng: 80.00 },
+            haryana: { petrol: 97.40, diesel: 90.20, cng: 79.00 },
+            up: { petrol: 96.60, diesel: 89.80, cng: 77.00 },
+            mp: { petrol: 108.60, diesel: 94.10, cng: 85.00 },
+            bihar: { petrol: 107.20, diesel: 94.00, cng: 86.00 },
+            tn: { petrol: 102.60, diesel: 94.20, cng: 82.00 },
+            kerala: { petrol: 107.80, diesel: 96.70, cng: 90.00 },
+            odisha: { petrol: 103.10, diesel: 94.70, cng: 84.00 },
+            assam: { petrol: 98.40, diesel: 90.10, cng: 83.00 },
+            telangana: { petrol: 109.60, diesel: 97.80, cng: 92.00 }
+        };
+
+        function setFuelType(type) {
+            currentFuelType = type;
+            const buttons = { 
+                petrol: document.getElementById('pBtn'), 
+                diesel: document.getElementById('dBtn'), 
+                cng: document.getElementById('cBtn') 
+            };
+
+            Object.keys(buttons).forEach(key => {
+                buttons[key].className = 'btn-fuel bg-slate-100 dark:bg-white/5 text-slate-400';
+            });
+
+            if(type === 'petrol') buttons.petrol.className = 'btn-fuel active petrol-active';
+            if(type === 'diesel') buttons.diesel.className = 'btn-fuel active diesel-active';
+            if(type === 'cng') buttons.cng.className = 'btn-fuel active cng-active';
+            
+            updatePriceFromCity();
+            calculateFuel();
+        }
+
+        function updatePriceFromCity() {
+            const city = document.getElementById('citySelect').value;
+            const rates = pricingData[city];
+            if (rates) {
+                const price = rates[currentFuelType];
+                document.getElementById('price').value = price.toFixed(2);
+            }
+        }
+
+        function calculateFuel() {
+            const d = parseFloat(document.getElementById('dist').value);
+            const m = parseFloat(document.getElementById('mileage').value);
+            const p = parseFloat(document.getElementById('price').value);
+
+            if (d > 0 && m > 0 && p > 0) {
+                const req = d / m;
+                const cost = req * p;
+
+                document.getElementById('tripCost').innerText = '₹ ' + Math.round(cost).toLocaleString('en-IN');
+                document.getElementById('fuelReq').innerText = req.toFixed(2) + (currentFuelType === 'cng' ? ' kg' : ' L');
+                
+                document.getElementById('fuelTypeLabel').innerText = currentFuelType.toUpperCase() + ' TRIP ANALYSIS';
+                const tips = {
+                    petrol: "High speed driving (above 80km/h) significantly reduces petrol efficiency. Keep a steady pace.",
+                    diesel: "Diesel engines are most efficient on longer highway runs at steady RPMs between 1500-2000.",
+                    cng: "CNG offers up to 50% savings over liquid fuels. Ensure your cylinder is certified and leakage-free."
+                };
+                document.getElementById('fuelTip').innerText = tips[currentFuelType];
+
+                document.getElementById('fuelRes').classList.remove('hidden');
+            }
+        }
+
+        updatePriceFromCity();
+        calculateFuel();
+    </script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Calculator - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s;
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .text-glow-pink {
+            text-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 right-0 w-[60%] h-[40%] bg-pink-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 left-0 w-[40%] h-[30%] bg-purple-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/index.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-pink-600 dark:text-pink-500">AGE</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">Life Tracker</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            </div>
+        </header>
+
+        <!-- Birthday Input -->
+        <div class="premium-card p-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl space-y-4">
+            <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Date of Birth</label>
+            <input type="date" id="dob" oninput="calculateAge()"
+                class="w-full input-glass rounded-2xl px-6 py-5 font-display font-black text-2xl outline-none text-slate-900 dark:text-white">
+        </div>
+
+        <!-- Result Display -->
+        <div class="premium-card p-10 flex flex-col items-center shadow-2xl relative overflow-hidden">
+            <div class="grid grid-cols-3 w-full gap-6 text-center">
+                <div class="space-y-1">
+                    <p id="ageYears" class="text-4xl font-display font-black text-glow-pink text-pink-500">0</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Years</p>
+                </div>
+                <div class="space-y-1">
+                    <p id="ageMonths" class="text-4xl font-display font-black text-slate-900 dark:text-white">0</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Months</p>
+                </div>
+                <div class="space-y-1">
+                    <p id="ageDays" class="text-4xl font-display font-black text-slate-900 dark:text-white">0</p>
+                    <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Days</p>
+                </div>
+            </div>
+
+            <div class="w-full mt-10 pt-10 border-t border-slate-100 dark:border-white/5 space-y-8">
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Current Year Progress</p>
+                        <p id="progressPerc" class="text-[10px] font-black font-display text-pink-500">0%</p>
+                    </div>
+                    <div class="w-full h-3 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden p-0.5">
+                        <div id="progressBar" class="h-full bg-pink-500 rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(236,72,153,0.4)]" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-5 premium-card bg-white/40 dark:bg-white/5 border-none text-center">
+                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Months</p>
+                        <p id="totalMonths" class="text-xl font-display font-black">0</p>
+                    </div>
+                    <div class="p-5 premium-card bg-white/40 dark:bg-white/5 border-none text-center">
+                        <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Days</p>
+                        <p id="totalDays" class="text-xl font-display font-black">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Birthday -->
+        <div class="premium-card p-6 bg-emerald-500/5 border-emerald-500/10 flex items-center gap-5 shadow-xl">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+                <h4 class="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Next Milestone</h4>
+                <p id="nextBirthday" class="text-lg font-display font-black text-slate-900 dark:text-white mt-1">Select Date of Birth</p>
+            </div>
+        </div>
+
+        <div class="text-center opacity-30 mt-4">
+            <p class="text-[9px] font-black tracking-[0.3em] uppercase">Time Intelligence</p>
+        </div>
+    </div>
+
+    <script src="/age.js"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+    </script>
+</body>
+</html>

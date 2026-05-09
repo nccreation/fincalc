@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNG vs Petrol - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s;
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .vs-pivot {
+            width: 3.5rem;
+            height: 3.5rem;
+            background: #0f172a;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 0.8rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            border: 4px solid #f8fafc;
+        }
+        .dark .vs-pivot {
+            background: #3b82f6;
+            border-color: #060606;
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 left-0 w-[50%] h-[40%] bg-emerald-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 right-0 w-[50%] h-[40%] bg-amber-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/fuel.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-emerald-600 dark:text-emerald-500">Savings</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">CNG vs Petrol</p>
+            </div>
+            <div class="w-12 h-12"></div>
+        </header>
+
+        <!-- Input Parameters -->
+        <div class="premium-card p-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl space-y-6">
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Daily Run (KM)</label>
+                <div class="relative">
+                    <input type="number" id="dailyDist" value="50" oninput="updateComparison()"
+                        class="w-full input-glass rounded-2xl px-6 py-5 font-display font-black text-3xl outline-none">
+                    <span class="absolute right-6 top-1/2 -translate-y-1/2 font-black text-slate-300 dark:text-zinc-600">KM</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-4">
+                    <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Petrol Price</label>
+                    <input type="number" id="pPrice" value="106.31" oninput="updateComparison()"
+                        class="w-full input-glass rounded-2xl px-5 py-4 font-display font-black text-xl outline-none">
+                </div>
+                <div class="space-y-4">
+                    <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">CNG Price</label>
+                    <input type="number" id="cPrice" value="76.00" oninput="updateComparison()"
+                        class="w-full input-glass rounded-2xl px-5 py-4 font-display font-black text-xl outline-none">
+                </div>
+            </div>
+        </div>
+
+        <!-- VS Comparison -->
+        <div class="relative">
+            <div class="vs-pivot shadow-2xl">VS</div>
+            <div class="grid grid-cols-2 gap-4">
+                <!-- Petrol side -->
+                <div class="premium-card p-6 flex flex-col items-center bg-amber-500/5 border-amber-500/20">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-4">Petrol Spend</p>
+                    <p id="pMonthly" class="text-2xl font-display font-black text-slate-900 dark:text-white">₹ 0</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">/ Monthly</p>
+                </div>
+                <!-- CNG side -->
+                <div class="premium-card p-6 flex flex-col items-center bg-emerald-500/5 border-emerald-500/20">
+                    <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-4">CNG Spend</p>
+                    <p id="cMonthly" class="text-2xl font-display font-black text-slate-900 dark:text-white">₹ 0</p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">/ Monthly</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conclusion Card -->
+        <div class="premium-card p-8 bg-emerald-500 text-white border-none shadow-2xl shadow-emerald-500/20">
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-[10px] font-black uppercase tracking-widest text-white/70">Potential Yearly Savings</p>
+                <div class="bg-white/20 px-3 py-1 rounded-full text-[9px] font-black tracking-widest">SMART PICK</div>
+            </div>
+            <p id="yearlySave" class="text-5xl font-display font-black">₹ 0</p>
+            <p class="text-xs font-medium text-emerald-50/70 mt-6 leading-relaxed">
+                By switching to CNG, you can save enough to cover your insurance, maintenance, and approximately 2 months of free fuel every year!
+            </p>
+        </div>
+
+        <div class="text-center opacity-30">
+            <p class="text-[9px] font-black tracking-[0.3em] uppercase">Fuel Efficiency Intelligence</p>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+
+        function updateComparison() {
+            const dist = parseFloat(document.getElementById('dailyDist').value) || 0;
+            const pPrice = parseFloat(document.getElementById('pPrice').value) || 0;
+            const cPrice = parseFloat(document.getElementById('cPrice').value) || 0;
+
+            const pMil = 15;
+            const cMil = 25;
+
+            const pMonthly = (dist * 30 / pMil) * pPrice;
+            const cMonthly = (dist * 30 / cMil) * cPrice;
+            const saving = (pMonthly - cMonthly) * 12;
+
+            document.getElementById('pMonthly').innerText = '₹' + Math.round(pMonthly).toLocaleString('en-IN');
+            document.getElementById('cMonthly').innerText = '₹' + Math.round(cMonthly).toLocaleString('en-IN');
+            document.getElementById('yearlySave').innerText = '₹' + Math.round(saving).toLocaleString('en-IN');
+        }
+
+        updateComparison();
+    </script>
+</body>
+</html>

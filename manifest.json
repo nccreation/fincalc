@@ -1,0 +1,17 @@
+{
+  "name": "Fincalc by NC creation",
+  "short_name": "Fincalc",
+  "description": "Premium Currency Converter and Loan Comparison Tool by NC creation",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#007AFF",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2454/2454261.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

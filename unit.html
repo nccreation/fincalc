@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s;
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .category-btn {
+            flex: 1 1 0%;
+            padding: 1rem 0.5rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            font-weight: 900;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s;
+            color: #94a3b8;
+        }
+        .dark .category-btn {
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        .category-btn.active {
+            background-color: #7c3aed;
+            color: white;
+            border-color: #6d28d9;
+            box-shadow: 0 20px 25px -5px rgba(124, 58, 237, 0.3);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 right-0 w-[60%] h-[40%] bg-violet-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 left-0 w-[40%] h-[30%] bg-indigo-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/index.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-violet-600 dark:text-violet-500">CONVERT</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">Multi-Unit Pro</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+        </header>
+
+        <!-- Category Hub -->
+        <div class="premium-card p-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl">
+            <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 mb-6 px-2">Select Dimension</label>
+            <div class="flex gap-3">
+                <button onclick="setCategory('length')" id="cat-length" class="category-btn active">Length</button>
+                <button onclick="setCategory('weight')" id="cat-weight" class="category-btn">Weight</button>
+                <button onclick="setCategory('temp')" id="cat-temp" class="category-btn">Temp</button>
+            </div>
+        </div>
+
+        <!-- Conversion Engine -->
+        <div class="premium-card p-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl space-y-8 relative overflow-hidden">
+            <!-- From -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">Input Source</label>
+                    <select id="fromUnit" onchange="convert('from')" class="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none"></select>
+                </div>
+                <input type="number" id="fromInput" value="1" oninput="convert('from')"
+                    class="w-full input-glass rounded-2xl px-6 py-6 font-display font-black text-3xl outline-none text-slate-900 dark:text-white">
+            </div>
+
+            <!-- Pivot -->
+            <div class="flex justify-center -my-4 relative z-10">
+                <div class="w-14 h-14 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-xl text-violet-600 active:rotate-180 transition-all duration-500 cursor-pointer" onclick="swapUnits()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 15 5 12l2-3"/><path d="M17 9l2 3-2 3"/><path d="M5 12h14"/></svg>
+                </div>
+            </div>
+
+            <!-- To -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between px-2">
+                    <label class="text-[11px] font-black uppercase tracking-widest text-slate-400">Result Output</label>
+                    <select id="toUnit" onchange="convert('to')" class="bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest outline-none"></select>
+                </div>
+                <input type="number" id="toInput" oninput="convert('to')"
+                    class="w-full input-glass rounded-2xl px-6 py-6 font-display font-black text-3xl outline-none text-violet-600 dark:text-violet-500">
+            </div>
+        </div>
+
+        <div class="text-center opacity-30 mt-4">
+            <p class="text-[9px] font-black tracking-[0.3em] uppercase">Precision Conversion Logic</p>
+        </div>
+    </div>
+
+    <script src="/unit.js"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+
+        function swapUnits() {
+            const from = document.getElementById('fromUnit').value;
+            const to = document.getElementById('toUnit').value;
+            document.getElementById('fromUnit').value = to;
+            document.getElementById('toUnit').value = from;
+            convert('from');
+        }
+    </script>
+</body>
+</html>

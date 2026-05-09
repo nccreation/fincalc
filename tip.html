@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tip Calculator - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s;
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .tip-tag {
+            flex: 1 1 0%;
+            padding: 0.75rem 0;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            font-weight: 900;
+            font-size: 0.75rem;
+            transition: all 0.3s;
+            background: rgba(15, 23, 42, 0.03);
+        }
+        .dark .tip-tag {
+            border-color: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .tip-tag.active {
+            background-color: #6366f1;
+            color: white;
+            border-color: #4f46e5;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 right-0 w-[60%] h-[40%] bg-indigo-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 left-0 w-[40%] h-[30%] bg-purple-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/index.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-indigo-600 dark:text-indigo-500">TIPS</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">Split Explorer</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+        </header>
+
+        <!-- Main Form -->
+        <div class="premium-card p-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl space-y-8">
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Total Bill Amount</label>
+                <div class="relative">
+                    <span class="absolute left-6 top-1/2 -translate-y-1/2 font-black text-indigo-500 text-xl">₹</span>
+                    <input type="number" id="bill" value="1000" oninput="calculateTip()"
+                        class="w-full input-glass rounded-2xl pl-12 pr-6 py-5 font-display font-black text-3xl outline-none">
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Select Tip %</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setTip(5)" class="tip-tag">5%</button>
+                    <button onclick="setTip(10)" class="tip-tag active" id="tip-10">10%</button>
+                    <button onclick="setTip(15)" class="tip-tag">15%</button>
+                    <button onclick="setTip(20)" class="tip-tag">20%</button>
+                </div>
+                <input type="number" id="customTip" placeholder="Custom Tip %" oninput="setCustomTip()"
+                    class="w-full input-glass rounded-xl px-4 py-3 font-bold text-sm outline-none">
+            </div>
+
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400 px-2">Split Bill Among</label>
+                <div class="flex items-center gap-6 input-glass rounded-2xl p-2">
+                    <button onclick="adjustSplit(-1)" class="w-12 h-12 rounded-xl bg-white dark:bg-white/10 flex items-center justify-center font-black text-2xl active:scale-95 shadow-sm text-indigo-500">-</button>
+                    <div class="flex-1 text-center">
+                        <span id="splitCount" class="font-display font-black text-2xl">1</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Person</span>
+                    </div>
+                    <button onclick="adjustSplit(1)" class="w-12 h-12 rounded-xl bg-white dark:bg-white/10 flex items-center justify-center font-black text-2xl active:scale-95 shadow-sm text-indigo-500">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="premium-card p-8 flex flex-col items-center text-center bg-indigo-500/5 border-indigo-500/20 shadow-xl">
+                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Total Tip</p>
+                <p id="totalTip" class="text-3xl font-display font-black text-slate-900 dark:text-white">₹ 0</p>
+            </div>
+            <div class="premium-card p-8 flex flex-col items-center text-center bg-emerald-500/5 border-emerald-500/20 shadow-xl">
+                <p class="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">Per Person</p>
+                <p id="perPerson" class="text-3xl font-display font-black text-emerald-500">₹ 0</p>
+            </div>
+        </div>
+
+        <div class="text-center opacity-30">
+            <p class="text-[9px] font-black tracking-[0.3em] uppercase">Gratuity Intelligence</p>
+        </div>
+    </div>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+
+        let currentTip = 10;
+        let split = 1;
+
+        function setTip(pct) {
+            currentTip = pct;
+            document.querySelectorAll('.tip-tag').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('customTip').value = '';
+            calculateTip();
+        }
+
+        function setCustomTip() {
+            const val = parseFloat(document.getElementById('customTip').value);
+            if (!isNaN(val)) {
+                currentTip = val;
+                document.querySelectorAll('.tip-tag').forEach(btn => btn.classList.remove('active'));
+                calculateTip();
+            }
+        }
+
+        function adjustSplit(val) {
+            split = Math.max(1, split + val);
+            document.getElementById('splitCount').innerText = split;
+            calculateTip();
+        }
+
+        function calculateTip() {
+            const bill = parseFloat(document.getElementById('bill').value) || 0;
+            const tipAmt = bill * (currentTip / 100);
+            const total = bill + tipAmt;
+            const perPerson = total / split;
+
+            document.getElementById('totalTip').innerText = '₹ ' + Math.round(tipAmt).toLocaleString('en-IN');
+            document.getElementById('perPerson').innerText = '₹ ' + Math.round(perPerson).toLocaleString('en-IN');
+        }
+
+        calculateTip();
+    </script>
+</body>
+</html>

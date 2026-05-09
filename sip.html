@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Calculator - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .input-glass:focus {
+            background: transparent;
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+        }
+        .text-glow-emerald {
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+        .bg-glow-emerald {
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 right-0 w-[60%] h-[40%] bg-emerald-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 left-0 w-[40%] h-[30%] bg-blue-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/index.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-emerald-600 dark:text-emerald-500">SIP</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">Wealth Creator</p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+            </div>
+        </header>
+
+        <!-- Chart & Total Wealth Display -->
+        <div class="premium-card p-10 flex flex-col items-center bg-white dark:bg-zinc-900/40 shadow-2xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-glow-emerald opacity-50 pointer-events-none"></div>
+            <div class="relative w-48 h-48 mb-8 z-10">
+                <canvas id="sipChart"></canvas>
+            </div>
+            
+            <div class="text-center z-10">
+                <p class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-500 mb-2">Estimated Returns</p>
+                <p id="totalVal" class="text-5xl font-display font-black text-glow-emerald text-slate-900 dark:text-white">₹ 0</p>
+            </div>
+        </div>
+
+        <!-- Breakdown Section -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="premium-card p-6 text-center border-l-4 border-l-blue-500">
+                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">Total Invested</p>
+                <p id="investedRes" class="text-xl font-display font-black text-blue-500">₹ 0</p>
+            </div>
+            <div class="premium-card p-6 text-center border-l-4 border-l-emerald-500">
+                <p class="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-2">Wealth Gained</p>
+                <p id="returnsRes" class="text-xl font-display font-black text-emerald-500">₹ 0</p>
+            </div>
+        </div>
+
+        <!-- Inputs Section -->
+        <div class="premium-card p-8 space-y-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl">
+            <div class="space-y-4">
+                <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400">Monthly Investment</label>
+                <div class="relative">
+                    <span class="absolute left-5 top-1/2 -translate-y-1/2 font-bold text-emerald-500">₹</span>
+                    <input type="number" id="monthly" value="5000" oninput="updateSIP()" 
+                        class="w-full input-glass rounded-2xl pl-10 pr-6 py-4 font-display font-black text-2xl outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400">Return Rate (%)</label>
+                    <input type="number" id="rate" value="12" step="0.1" oninput="updateSIP()" 
+                        class="w-full input-glass rounded-2xl px-6 py-4 font-display font-black text-2xl outline-none">
+                </div>
+                <div class="space-y-4">
+                    <label class="block text-[11px] font-black uppercase tracking-widest text-slate-400">Time Period (Yrs)</label>
+                    <input type="number" id="years" value="10" oninput="updateSIP()" 
+                        class="w-full input-glass rounded-2xl px-6 py-4 font-display font-black text-2xl outline-none">
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Label -->
+        <div class="text-center opacity-30 mt-4">
+            <p class="text-[9px] font-black tracking-[0.3em] uppercase">Invest early, Retire happy</p>
+        </div>
+    </div>
+
+    <script src="/sip.js"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

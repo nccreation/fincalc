@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Comparison - Fincalc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+        }
+        .dark .premium-card {
+            background: rgba(24, 24, 27, 0.5);
+        }
+        .input-glass {
+            background: rgba(15, 23, 42, 0.03);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            transition: all 0.3s;
+        }
+        .dark .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300 bg-slate-50 dark:bg-[#060606] text-slate-900 dark:text-white min-h-screen pb-12 font-sans overflow-x-hidden">
+    <!-- Background Accents -->
+    <div class="fixed top-0 right-0 w-[60%] h-[40%] bg-blue-600/10 blur-[120px] -z-10 rounded-full"></div>
+    <div class="fixed bottom-0 left-0 w-[40%] h-[30%] bg-indigo-600/10 blur-[120px] -z-10 rounded-full"></div>
+
+    <div class="max-w-[480px] mx-auto p-6 flex flex-col gap-8">
+        <!-- Header -->
+        <header class="flex items-center justify-between py-2">
+            <a href="/index.html" class="w-12 h-12 rounded-2xl bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg active:scale-95 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </a>
+            <div class="text-center">
+                <h1 class="font-display font-black text-xl tracking-tight leading-none text-blue-600 dark:text-blue-500">COMPARE</h1>
+                <p class="text-[9px] font-bold uppercase tracking-[0.3em] opacity-40 mt-1">Loan Battle</p>
+            </div>
+            <div class="w-12 h-12"></div>
+        </header>
+
+        <!-- Visualization Hub -->
+        <div class="premium-card p-10 flex flex-col items-center bg-white dark:bg-zinc-900/40 shadow-2xl">
+            <div class="relative w-full h-48 mb-8">
+                <canvas id="compareChart"></canvas>
+            </div>
+            
+            <div id="verdictBox" class="w-full p-6 rounded-[1.5rem] bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 text-center">
+                <p class="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-500 mb-2">Smart Analysis Verdict</p>
+                <p id="verdictText" class="text-xs font-black font-display text-slate-700 dark:text-white leading-relaxed"></p>
+            </div>
+        </div>
+
+        <!-- Loan Parameter Grids -->
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Loan A -->
+            <div class="premium-card p-8 space-y-6 bg-white/60 dark:bg-zinc-900/60 shadow-xl border-t-8 border-t-blue-500">
+                <div class="flex items-center gap-3">
+                    <div class="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">PLAN A</span>
+                </div>
+                <!-- Mini Input stack -->
+                <div class="space-y-4">
+                    <input type="number" id="pA" value="1000000" oninput="compareLoans()" class="w-full input-glass rounded-xl px-4 py-3 font-display font-black text-sm outline-none" placeholder="Amount">
+                    <input type="number" id="iA" value="8.5" step="0.1" oninput="compareLoans()" class="w-full input-glass rounded-xl px-4 py-3 font-display font-black text-sm outline-none" placeholder="Rate %">
+                    <input type="number" id="yA" value="20" oninput="compareLoans()" class="w-full input-glass rounded-xl px-4 py-3 font-display font-black text-sm outline-none" placeholder="Years">
+                </div>
+                <div class="pt-4 border-t border-slate-100 dark:border-white/5">
+                    <p id="emiA" class="text-lg font-display font-black text-blue-600 dark:text-blue-500 tracking-tighter">₹ 0</p>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1">Monthly EMI</p>
+                </div>
+            </div>
+
+            <!-- Loan B -->
+            <div class="premium-card p-8 space-y-6 bg-white/60 dark:bg-zinc-900/60 shadow-xl border-t-8 border-t-indigo-500">
+                <div class="flex items-center gap-3">
+                    <div class="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">PLAN B</span>
+                </div>
+                <!-- Mini Input stack -->
+                <div class="space-y-4">
+                    <input type="number" id="pB" value="1000000" oninput="compareLoans()" class="w-full input-glass rounded-xl px-4 py-3 font-display font-black text-sm outline-none" placeholder="Amount">
+                    <input type="number" id="iB" value="9.2" step="0.1" oninput="compareLoans()" class="w-full input-glass rounded-xl px-4 py-3 font-display font-black text-sm outline-none" placeholder="Rate %">
+                    <input type="number" id="yB" value="20" oninput="compareLoans()" class="w-full input-glass rounded-xl px-4 py-3 font-display font-black text-sm outline-none" placeholder="Years">
+                </div>
+                <div class="pt-4 border-t border-slate-100 dark:border-white/5">
+                    <p id="emiB" class="text-lg font-display font-black text-indigo-600 dark:text-indigo-500 tracking-tighter">₹ 0</p>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1">Monthly EMI</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lifetime Interest Summary -->
+        <div class="premium-card p-8 bg-white/60 dark:bg-zinc-900/60 shadow-xl">
+            <p class="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 text-center">Lifetime Interest Overhead</p>
+            <div class="grid grid-cols-2 gap-1 px-4 relative">
+                <div class="text-center p-2">
+                    <p id="totalIntA" class="text-lg font-display font-black text-blue-600 dark:text-blue-500">₹ 0</p>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1">Loan A Total</p>
+                </div>
+                <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-px h-10 bg-slate-200 dark:bg-white/10"></div>
+                <div class="text-center p-2">
+                    <p id="totalIntB" class="text-lg font-display font-black text-indigo-600 dark:text-indigo-500">₹ 0</p>
+                    <p class="text-[8px] font-black uppercase tracking-widest text-slate-400 mt-1">Loan B Total</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-center gap-6">
+            <button onclick="resetLoans()" class="w-full max-w-[280px] py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-3xl font-display font-black text-sm uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all">
+                Reset Comparison
+            </button>
+            <div class="text-center opacity-30 mt-2">
+                <p class="text-[9px] font-black tracking-[0.3em] uppercase">Debt Strategy Intelligence</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/compare.js"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+    </script>
+</body>
+</html>
