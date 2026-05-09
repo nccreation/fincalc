@@ -190,10 +190,16 @@ const MARKET_ASSETS = [
   { name: 'Bitcoin', value: '64,120', change: '-0.8%', up: false, icon: '₿', category: 'Crypto' },
   { name: 'USD/INR', value: '83.45', change: '+0.05%', up: true, icon: '💵', category: 'Forex' },
   { name: 'Nifty 50', value: '22,410', change: '+0.45%', up: true, icon: '📈', category: 'Stocks' },
+  { name: 'Reliance', value: '2,950', change: '+0.25%', up: true, icon: '🏭', category: 'Stocks' },
+  { name: 'HDFC Bank', value: '1,450', change: '-0.15%', up: false, icon: '🏦', category: 'Stocks' },
+  { name: 'Tata Motors', value: '980', change: '+1.8%', up: true, icon: '🚗', category: 'Stocks' },
   { name: 'Ethereum', value: '3,450', change: '-1.1%', up: false, icon: '⟠', category: 'Crypto' },
   { name: 'Sensex', value: '73,800', change: '+0.32%', up: true, icon: '📊', category: 'Stocks' },
   { name: 'Silver', value: '81,200', change: '+2.1%', up: true, icon: '🥈', category: 'Commodities' },
   { name: 'Crude Oil', value: '6,840', change: '-1.4%', up: false, icon: '🛢️', category: 'Commodities' },
+  { name: 'ICICI Bank', value: '1,120', change: '+0.5%', up: true, icon: '💳', category: 'Stocks' },
+  { name: 'TCS', value: '3,850', change: '-0.3%', up: false, icon: '💻', category: 'Stocks' },
+  { name: 'Solana', value: '145', change: '+3.2%', up: true, icon: '☀️', category: 'Crypto' },
 ];
 
 const ALL_TOOLS: Tool[] = [
@@ -230,7 +236,7 @@ interface MarketItem {
   icon: string;
 }
 
-const MarketTicker = React.memo(({ onWatchlistToggle, isInWatchlist }: { onWatchlistToggle: (asset: any) => void, isInWatchlist: (name: string) => boolean }) => {
+const MarketTicker = React.memo(({ marketItems, onWatchlistToggle, isInWatchlist }: { marketItems: any[], onWatchlistToggle: (asset: any) => void, isInWatchlist: (name: string) => boolean }) => {
   return (
     <div className="w-full overflow-hidden bg-white/5 dark:bg-black backdrop-blur-md border-y border-white/5 py-2.5 mb-6 shadow-2xl relative">
       <style>{`
@@ -254,7 +260,7 @@ const MarketTicker = React.memo(({ onWatchlistToggle, isInWatchlist }: { onWatch
         }
       `}</style>
       <div className="ticker-scroll flex gap-4 whitespace-nowrap px-4 will-change-transform">
-        {[...MARKET_ASSETS, ...MARKET_ASSETS].map((asset, i) => (
+        {[...marketItems, ...marketItems].map((asset, i) => (
           <div key={i} className="flex items-center gap-2 ticker-pill shadow-inner group">
             <span className="text-sm">{asset.icon}</span>
             <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{asset.name}</span>
@@ -321,6 +327,7 @@ interface AppState {
   isListening: boolean;
   history: { equation: string, result: string, date: string }[];
   isScientific: boolean;
+  marketItems: any[];
 }
 
 type AppAction = 
@@ -342,9 +349,10 @@ type AppAction =
   | { type: 'SET_CALC_STATE', payload: Partial<AppState> }
   | { type: 'SET_RECENT_TOOLS', payload: string[] }
   | { type: 'INC_CALC_USAGE' }
-  | { type: 'SET_INTERSTITIAL', payload: boolean };
+  | { type: 'SET_INTERSTITIAL', payload: boolean }
+  | { type: 'UPDATE_MARKET_ITEMS', payload: any[] };
 
-function appReducer(state: AppState, action: AppAction): AppState {
+function appReducer(state: AppState, action: AppAction) : AppState {
   switch (action.type) {
     case 'SET_TAB': return { ...state, activeTab: action.payload };
     case 'TOGGLE_DARK_MODE': return { ...state, isDarkMode: !state.isDarkMode };
@@ -371,6 +379,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         showInterstitial: state.userPlan === 'free' && newCount % 3 === 0 
       };
     case 'SET_INTERSTITIAL': return { ...state, showInterstitial: action.payload };
+    case 'UPDATE_MARKET_ITEMS': return { ...state, marketItems: action.payload };
     default: return state;
   }
 }
@@ -420,7 +429,8 @@ export default function App() {
     explanation: null,
     isListening: false,
     history: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('calc_history') || '[]') : [],
-    isScientific: false
+    isScientific: false,
+    marketItems: [...MARKET_ASSETS]
   };
 
   const [state, dispatch] = useReducer(appReducer, initialState);
@@ -435,6 +445,38 @@ export default function App() {
   useEffect(() => localStorage.setItem('fincalc_notifications', JSON.stringify(state.notifications)), [state.notifications]);
   useEffect(() => localStorage.setItem('user_watchlist', JSON.stringify(state.watchlist)), [state.watchlist]);
   useEffect(() => localStorage.setItem('calc_history', JSON.stringify(state.history)), [state.history]);
+
+  // Real-time Market Data Simulation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const updatedItems = state.marketItems.map(item => {
+        const currentVal = parseFloat(item.value.replace(/,/g, ''));
+        const volatility = 0.0005; // 0.05% max change
+        const changePercent = (Math.random() * volatility * 2) - volatility;
+        const newVal = currentVal * (1 + changePercent);
+        
+        let changeStr = item.change;
+        let up = item.up;
+
+        // Occasionally flip the trend
+        if (Math.random() > 0.9) up = !up;
+        
+        const finalChange = (Math.random() * 0.1).toFixed(2);
+        changeStr = (up ? '+' : '-') + finalChange + '%';
+
+        return {
+          ...item,
+          value: newVal.toLocaleString('en-IN', { maximumFractionDigits: 2 }),
+          change: changeStr,
+          up: up
+        };
+      });
+      dispatch({ type: 'UPDATE_MARKET_ITEMS', payload: updatedItems });
+    }, 3000); // Update every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [state.marketItems]);
+
   useEffect(() => {
     if (state.isDarkMode) document.body.classList.add('dark');
     else document.body.classList.remove('dark');
@@ -612,7 +654,7 @@ export default function App() {
   }, [debouncedSearchQuery]);
 
   const filteredAssets = useMemo(() => {
-    let assets = [...MARKET_ASSETS];
+    let assets = [...state.marketItems];
     if (state.marketFilter !== 'All') {
       assets = assets.filter(a => (a as any).category === state.marketFilter);
     }
@@ -625,7 +667,7 @@ export default function App() {
       return 0;
     });
     return assets;
-  }, [state.marketFilter, state.marketSort]);
+  }, [state.marketFilter, state.marketSort, state.marketItems]);
 
   const toolsByCategory = useMemo(() => {
     const cats: Record<string, Tool[]> = {};
@@ -750,7 +792,7 @@ export default function App() {
       </header>
 
       {/* Market Ticker */}
-      <MarketTicker onWatchlistToggle={toggleWatchlist} isInWatchlist={isInWatchlist} />
+      <MarketTicker marketItems={state.marketItems} onWatchlistToggle={toggleWatchlist} isInWatchlist={isInWatchlist} />
 
       {/* Main View Area */}
       <main className="flex-1 overflow-y-auto pb-4 px-4 no-scrollbar">
