@@ -328,6 +328,8 @@ interface AppState {
   history: { equation: string, result: string, date: string }[];
   isScientific: boolean;
   marketItems: any[];
+  lastUpdated: string;
+  isRefreshing: boolean;
 }
 
 type AppAction = 
@@ -350,7 +352,8 @@ type AppAction =
   | { type: 'SET_RECENT_TOOLS', payload: string[] }
   | { type: 'INC_CALC_USAGE' }
   | { type: 'SET_INTERSTITIAL', payload: boolean }
-  | { type: 'UPDATE_MARKET_ITEMS', payload: any[] };
+  | { type: 'UPDATE_MARKET_ITEMS', payload: { items: any[], timestamp: string } }
+  | { type: 'SET_REFRESHING', payload: boolean };
 
 function appReducer(state: AppState, action: AppAction) : AppState {
   switch (action.type) {
@@ -379,7 +382,8 @@ function appReducer(state: AppState, action: AppAction) : AppState {
         showInterstitial: state.userPlan === 'free' && newCount % 3 === 0 
       };
     case 'SET_INTERSTITIAL': return { ...state, showInterstitial: action.payload };
-    case 'UPDATE_MARKET_ITEMS': return { ...state, marketItems: action.payload };
+    case 'UPDATE_MARKET_ITEMS': return { ...state, marketItems: action.payload.items, lastUpdated: action.payload.timestamp };
+    case 'SET_REFRESHING': return { ...state, isRefreshing: action.payload };
     default: return state;
   }
 }
@@ -430,7 +434,9 @@ export default function App() {
     isListening: false,
     history: typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('calc_history') || '[]') : [],
     isScientific: false,
-    marketItems: [...MARKET_ASSETS]
+    marketItems: [...MARKET_ASSETS],
+    lastUpdated: new Date().toLocaleTimeString(),
+    isRefreshing: false
   };
 
   const [state, dispatch] = useReducer(appReducer, initialState);
@@ -446,36 +452,58 @@ export default function App() {
   useEffect(() => localStorage.setItem('user_watchlist', JSON.stringify(state.watchlist)), [state.watchlist]);
   useEffect(() => localStorage.setItem('calc_history', JSON.stringify(state.history)), [state.history]);
 
-  // Real-time Market Data Simulation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const updatedItems = state.marketItems.map(item => {
-        const currentVal = parseFloat(item.value.replace(/,/g, ''));
-        const volatility = 0.0005; // 0.05% max change
-        const changePercent = (Math.random() * volatility * 2) - volatility;
-        const newVal = currentVal * (1 + changePercent);
-        
-        let changeStr = item.change;
-        let up = item.up;
+  // Real-time Market Data Simulation & Fetch
+  const refreshMarketData = useCallback(async () => {
+    dispatch({ type: 'SET_REFRESHING', payload: true });
+    
+    try {
+      // Fetch some real crypto prices as representative "live" data
+      const [btcRes, ethRes] = await Promise.all([
+        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot').then(r => r.json()),
+        fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot').then(r => r.json())
+      ]);
 
-        // Occasionally flip the trend
-        if (Math.random() > 0.9) up = !up;
-        
-        const finalChange = (Math.random() * 0.1).toFixed(2);
-        changeStr = (up ? '+' : '-') + finalChange + '%';
+      const btcPrice = parseFloat(btcRes?.data?.amount || '64000');
+      const ethPrice = parseFloat(ethRes?.data?.amount || '3400');
+
+      const updatedItems = state.marketItems.map(item => {
+        let newValNum: number;
+        if (item.name === 'Bitcoin') newValNum = btcPrice;
+        else if (item.name === 'Ethereum') newValNum = ethPrice;
+        else {
+          const currentVal = parseFloat(item.value.replace(/,/g, ''));
+          const volatility = 0.001; 
+          const changePercent = (Math.random() * volatility * 2) - volatility;
+          newValNum = currentVal * (1 + changePercent);
+        }
+
+        let up = item.up;
+        if (Math.random() > 0.8) up = !up;
+        const changeStr = (up ? '+' : '-') + (Math.random() * 0.5).toFixed(2) + '%';
 
         return {
           ...item,
-          value: newVal.toLocaleString('en-IN', { maximumFractionDigits: 2 }),
+          value: newValNum.toLocaleString('en-IN', { maximumFractionDigits: 2 }),
           change: changeStr,
           up: up
         };
       });
-      dispatch({ type: 'UPDATE_MARKET_ITEMS', payload: updatedItems });
-    }, 3000); // Update every 3 seconds
 
-    return () => clearInterval(interval);
+      dispatch({ 
+        type: 'UPDATE_MARKET_ITEMS', 
+        payload: { items: updatedItems, timestamp: new Date().toLocaleTimeString() } 
+      });
+    } catch (error) {
+      console.error("Market data fetch failed:", error);
+    } finally {
+      setTimeout(() => dispatch({ type: 'SET_REFRESHING', payload: false }), 500);
+    }
   }, [state.marketItems]);
+
+  useEffect(() => {
+    const interval = setInterval(refreshMarketData, 10000); // Auto-refresh every 10 seconds
+    return () => clearInterval(interval);
+  }, [refreshMarketData]);
 
   useEffect(() => {
     if (state.isDarkMode) document.body.classList.add('dark');
@@ -793,6 +821,22 @@ export default function App() {
 
       {/* Market Ticker */}
       <MarketTicker marketItems={state.marketItems} onWatchlistToggle={toggleWatchlist} isInWatchlist={isInWatchlist} />
+
+      <div className="px-6 flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Live Markets</span>
+          <span className="text-[9px] font-bold text-slate-400 opacity-60 ml-1">Updated {state.lastUpdated}</span>
+        </div>
+        <button 
+          onClick={refreshMarketData}
+          disabled={state.isRefreshing}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50"
+        >
+          <RotateCcw className={`w-3 h-3 text-blue-500 ${state.isRefreshing ? 'animate-spin' : ''}`} />
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white">Refresh</span>
+        </button>
+      </div>
 
       {/* Main View Area */}
       <main className="flex-1 overflow-y-auto pb-4 px-4 no-scrollbar">
